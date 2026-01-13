@@ -1,0 +1,15 @@
+# Example .env
+
+***
+
+```
+spring.datasource.url=jdbc:postgresql://localhost:5432/labflow
+spring.datasource.username=postgres
+spring.datasource.password=123456
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+jwt-key=labflow-app-key-super-secret-classified
+```
