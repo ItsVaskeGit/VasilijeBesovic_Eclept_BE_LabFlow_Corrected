@@ -1,28 +1,53 @@
 package me.vasilije.labflow.service;
 
+import jakarta.transaction.Transactional;
 import me.vasilije.labflow.model.LabMachine;
+import me.vasilije.labflow.model.Technician;
 import me.vasilije.labflow.repository.MachineRepository;
+import me.vasilije.labflow.repository.TechnicianRepository;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
 
 @Service
 public class MachineService {
 
-    private final MachineRepository repository;
+    private final MachineRepository machineRepository;
+    private final TechnicianRepository technicianRepository;
 
-    public MachineService(MachineRepository repository) {
-        this.repository = repository;
+    private final TaskScheduler scheduler = new SimpleAsyncTaskScheduler();
+
+    public MachineService(MachineRepository machineRepository, TechnicianRepository technicianRepository) {
+        this.machineRepository = machineRepository;
+        this.technicianRepository = technicianRepository;
     }
 
-    public boolean replaceReagents() {
-        // TODO
-        return true;
+    @Transactional
+    public void replaceReagents() {
+        var technicians = technicianRepository.findAll();
+        for(var technician : technicians) {
+            technician.setBusy(true);
+        }
+        scheduler.schedule(doReplacement(), Instant.now().plusSeconds(240));
     }
 
-    public LabMachine checkReagentAvailability() {
+    @Transactional
+    Runnable doReplacement() {
+        return () -> {
 
-        var machines = repository.findAll();
+            var machines = machineRepository.findAll();
+            var technicians = technicianRepository.findAll();
 
-        // TODO
-        return null;
+            for(var machine : machines) {
+                machine.setReagentUnits(500);
+            }
+
+            for(var technician : technicians) {
+                technician.setBusy(false);
+            }
+        };
     }
 }

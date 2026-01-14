@@ -4,19 +4,17 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "users")
 @Data
-public class User {
+public class TestType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    private String username;
+    private String name;
 
-    private String password;
+    private int duration;
 
-    private boolean isTechnician;
+    private int reagentUnitsNeeded;
 
-    private boolean isAdmin;
 }

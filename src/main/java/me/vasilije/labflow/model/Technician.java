@@ -15,4 +15,8 @@ public class Technician {
 
     @ManyToOne
     public User user;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "machine_id", referencedColumnName = "id")
+    public LabMachine labMachine;
 }

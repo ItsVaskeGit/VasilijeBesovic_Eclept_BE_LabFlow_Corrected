@@ -1,13 +1,15 @@
 package me.vasilije.labflow.service;
 
+import jakarta.transaction.Transactional;
 import me.vasilije.labflow.model.Technician;
 import me.vasilije.labflow.model.User;
 import me.vasilije.labflow.repository.TechnicianRepository;
 import me.vasilije.labflow.repository.UserRepository;
 import me.vasilije.labflow.utils.TokenUtils;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
@@ -16,8 +18,6 @@ public class UserService {
 
     private final TechnicianRepository technicianRepository;
 
-    private final PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-
     private final TokenUtils utils = new TokenUtils();
 
     public UserService(UserRepository userRepository, TechnicianRepository technicianRepository) {
@@ -25,6 +25,7 @@ public class UserService {
         this.technicianRepository = technicianRepository;
     }
 
+    @Transactional
     public boolean registerNewUser(String username, String unhashedPassword, boolean isTechnician) {
 
         if(checkUserExists(username)) {
@@ -34,7 +35,7 @@ public class UserService {
         var newUser = new User();
 
         newUser.setUsername(username);
-        newUser.setPassword(encoder.encode(unhashedPassword));
+        newUser.setPassword(BCrypt.hashpw(unhashedPassword, BCrypt.gensalt()));
         newUser.setTechnician(isTechnician);
         newUser.setAdmin(false);
 
@@ -52,23 +53,33 @@ public class UserService {
         return true;
     }
 
-    public String login(String username, String password) {
+    public String login(String username, String password) throws ResponseStatusException {
 
         if(!checkUserExists(username)) {
             return null;
         }
 
-        var user = userRepository.findByUsername(username);
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!encoder.matches(password, user.getPassword())) {
+        if(!BCrypt.checkpw(password, user.getPassword())) {
             return null;
         }
 
         return utils.fetchToken(username);
     }
 
-    public void promote(String username) {
+    @Transactional
+    public boolean promote(String username) throws ResponseStatusException {
 
+        if(!checkUserExists(username)) {
+            return false;
+        }
+
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        user.setAdmin(true);
+
+        return true;
     }
 
     public boolean checkUserExists(String username) {

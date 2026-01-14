@@ -4,11 +4,8 @@ import me.vasilije.labflow.dto.LoginDTO;
 import me.vasilije.labflow.dto.RegisterDTO;
 import me.vasilije.labflow.service.UserService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class UserAPI {
@@ -20,23 +17,36 @@ public class UserAPI {
     }
 
     @RequestMapping(path = "/login", method = RequestMethod.POST)
-    private String login(@RequestBody LoginDTO login) {
+    public String login(@RequestBody LoginDTO login) {
         var token = userService.login(login.getUsername(), login.getPassword());
 
         if(token == null) {
-            return new ResponseEntity<String>(HttpStatus.NOT_FOUND).getBody();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
         return token;
     }
 
     @RequestMapping(path = "/register", method = RequestMethod.POST)
-    private Boolean register(@RequestBody RegisterDTO register) {
+    public Boolean register(@RequestBody RegisterDTO register) {
+
         var registerNewUser = userService.registerNewUser(register.getUsername(), register.getPassword(), register.isTechnician());
+
         if(registerNewUser) {
-            return new ResponseEntity<Boolean>(HttpStatus.CREATED).getBody();
+            return true;
         }
 
-        return new ResponseEntity<Boolean>(HttpStatus.BAD_REQUEST).getBody();
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+    }
+
+    @RequestMapping(path = "/promote/{username}", method = RequestMethod.PUT)
+    public Boolean promote(@PathVariable String username) {
+        var promote = userService.promote(username);
+
+        if(!promote) {
+           throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        return true;
     }
 }

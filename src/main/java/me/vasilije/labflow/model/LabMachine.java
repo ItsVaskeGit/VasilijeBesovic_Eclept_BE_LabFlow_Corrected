@@ -11,8 +11,8 @@ public class LabMachine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
-    private Technician technician;
-
     private int reagentUnits;
+
+    @OneToOne(mappedBy = "labMachine")
+    private Technician technician;
 }

@@ -11,12 +11,18 @@ public class Test {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    private String name;
-
-    private int duration;
-
-    private int reagentUnitsNeeded;
+    @ManyToOne
+    private TestType type;
 
     @ManyToOne
     public User patient;
+
+    @ManyToOne
+    public Technician technician;
+
+    @ManyToOne
+    public LabMachine machine;
+
+    private boolean finished;
+
 }
