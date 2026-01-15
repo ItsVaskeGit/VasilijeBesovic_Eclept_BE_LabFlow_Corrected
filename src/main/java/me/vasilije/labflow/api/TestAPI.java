@@ -2,10 +2,12 @@ package me.vasilije.labflow.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import me.vasilije.labflow.exception.NoMachinesAvailableException;
+import me.vasilije.labflow.model.Test;
 import me.vasilije.labflow.service.MachineService;
 import me.vasilije.labflow.service.TestService;
 import me.vasilije.labflow.utils.TokenUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,7 +25,7 @@ public class TestAPI {
     }
 
     @RequestMapping(path = "/schedule/{id}", method = RequestMethod.POST)
-    public Boolean sheduleTest(@PathVariable long id, HttpServletRequest req) {
+    public ResponseEntity sheduleTest(@PathVariable long id, HttpServletRequest req) {
 
         var jwtToken = req.getHeader("Authorization").split(" ")[1];
 
@@ -36,7 +38,7 @@ public class TestAPI {
         } catch (NoMachinesAvailableException e) {
             // If this exception is thrown then all machines are depleted and replacement of the reagents is needed.
             machineService.replaceReagents();
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "All machines are undergoing maintenance now. Try again in a few minutes.");
+            return ResponseEntity.status(503).body("All machines are undergoing maintenance now. Try again in a few minutes.");
         }
     }
 }

@@ -1,5 +1,6 @@
 package me.vasilije.labflow.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class Test {
     private TestType type;
 
     @ManyToOne
+    @JsonIgnore
     public User patient;
 
     @ManyToOne

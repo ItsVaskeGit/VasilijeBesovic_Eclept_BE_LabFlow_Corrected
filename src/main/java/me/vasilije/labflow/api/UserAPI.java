@@ -1,11 +1,12 @@
 package me.vasilije.labflow.api;
 
+import jakarta.servlet.http.HttpServletRequest;
 import me.vasilije.labflow.dto.LoginDTO;
 import me.vasilije.labflow.dto.RegisterDTO;
+import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.service.UserService;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class UserAPI {
@@ -17,36 +18,24 @@ public class UserAPI {
     }
 
     @RequestMapping(path = "/login", method = RequestMethod.POST)
-    public String login(@RequestBody LoginDTO login) {
-        var token = userService.login(login.getUsername(), login.getPassword());
-
-        if(token == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-
-        return token;
+    public ResponseEntity login(@RequestBody LoginDTO login) {
+        return userService.login(login.getUsername(), login.getPassword());
     }
 
     @RequestMapping(path = "/register", method = RequestMethod.POST)
-    public Boolean register(@RequestBody RegisterDTO register) {
-
-        var registerNewUser = userService.registerNewUser(register.getUsername(), register.getPassword(), register.isTechnician());
-
-        if(registerNewUser) {
-            return true;
-        }
-
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+    public ResponseEntity register(@RequestBody RegisterDTO register) {
+        return userService.registerNewUser(register.getUsername(), register.getPassword(), register.isTechnician());
     }
 
     @RequestMapping(path = "/promote/{username}", method = RequestMethod.PUT)
-    public Boolean promote(@PathVariable String username) {
-        var promote = userService.promote(username);
+    public ResponseEntity promote(@PathVariable String username, HttpServletRequest req) {
 
-        if(!promote) {
-           throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+
+        try {
+            return userService.promote(username, jwtToken);
+        }catch (UserNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
         }
-
-        return true;
     }
 }

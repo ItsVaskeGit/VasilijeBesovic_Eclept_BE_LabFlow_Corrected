@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface TechnicianRepository extends JpaRepository<Technician, Long> {
 
-    @Query(value = "SELECT t FROM Technician t JOIN t.labMachine m WHERE t.isBusy = false AND m.reagentUnits >= ?1 ORDER BY t.id LIMIT 1")
+    @Query(value = "SELECT t FROM Technician t JOIN t.labMachine m WHERE t.isBusy = false AND m.reagentUnits >= ?1")
     Optional<Technician> findFreeTechnicianWithAvailableMachine(int reagentsNeeded);
 }

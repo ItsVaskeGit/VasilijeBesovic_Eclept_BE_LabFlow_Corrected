@@ -1,13 +1,14 @@
 package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
+import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.model.Technician;
 import me.vasilije.labflow.model.User;
 import me.vasilije.labflow.repository.TechnicianRepository;
 import me.vasilije.labflow.repository.UserRepository;
 import me.vasilije.labflow.utils.TokenUtils;
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,10 +27,10 @@ public class UserService {
     }
 
     @Transactional
-    public boolean registerNewUser(String username, String unhashedPassword, boolean isTechnician) {
+    public ResponseEntity registerNewUser(String username, String unhashedPassword, boolean isTechnician) {
 
         if(checkUserExists(username)) {
-            return false;
+            return ResponseEntity.status(400).body("User with that username already exists.");
         }
 
         var newUser = new User();
@@ -50,36 +51,42 @@ public class UserService {
             technicianRepository.save(newTechnician);
         }
 
-        return true;
+        return ResponseEntity.status(200).body(savedUser);
     }
 
-    public String login(String username, String password) throws ResponseStatusException {
+    public ResponseEntity login(String username, String password) throws ResponseStatusException {
 
         if(!checkUserExists(username)) {
-            return null;
+            return ResponseEntity.status(401).body("Invalid username or password.");
         }
 
-        var user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var user = userRepository.findByUsername(username).get();
 
         if(!BCrypt.checkpw(password, user.getPassword())) {
-            return null;
+            return ResponseEntity.status(401).body("Invalid username or password.");
         }
 
-        return utils.fetchToken(username);
+        return ResponseEntity.status(200).body(utils.fetchToken(username));
     }
 
     @Transactional
-    public boolean promote(String username) throws ResponseStatusException {
+    public ResponseEntity promote(String username, String jwtToken) throws UserNotFoundException {
 
-        if(!checkUserExists(username)) {
-            return false;
+        var currentUser = userRepository.findByUsername(utils.getUsername(jwtToken)).get();
+
+        if(!currentUser.isAdmin()) {
+            return ResponseEntity.status(401).body("Current user is not authenticated.");
         }
 
-        var user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if(!checkUserExists(username)) {
+            return ResponseEntity.status(404).body("User not found.");
+        }
+
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found."));
 
         user.setAdmin(true);
 
-        return true;
+        return ResponseEntity.status(200).build();
     }
 
     public boolean checkUserExists(String username) {
