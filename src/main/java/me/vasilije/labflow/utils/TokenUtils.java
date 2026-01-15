@@ -1,10 +1,8 @@
 package me.vasilije.labflow.utils;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import me.vasilije.labflow.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +12,7 @@ import java.util.Date;
 public class TokenUtils {
 
     @Value("${jwt.key}")
-    private String JWT_SECRET = "labflow-app-key-super-secret-classified";
+    private String JWT_SECRET;
 
     private UserService userService;
 
@@ -25,7 +23,7 @@ public class TokenUtils {
     public TokenUtils() {}
 
     public String fetchToken(String username) {
-        return Jwts.builder().setSubject(username).setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+        return Jwts.builder().subject(username).issuedAt(new Date()).expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes())).compact();
     }
 
@@ -34,12 +32,11 @@ public class TokenUtils {
     }
 
     public boolean checkToken(String jwtToken) {
-//        return (userService.checkUserExists(getUsername(jwtToken)) && stillValid(jwtToken));
-        return stillValid(jwtToken);
+        return (userService.checkUserExists(getUsername(jwtToken)) && stillValid(jwtToken));
     }
 
     private boolean stillValid(String jwtToken) {
-        var expirationDate = Jwts.parser().setSigningKey(JWT_SECRET.getBytes()).build().parseClaimsJws(jwtToken)
+        var expirationDate = Jwts.parser().setSigningKey(JWT_SECRET.getBytes()).build().parseSignedClaims(jwtToken)
                 .getBody().getExpiration();
         return expirationDate.after(new Date());
     }

@@ -19,11 +19,12 @@ public class UserService {
 
     private final TechnicianRepository technicianRepository;
 
-    private final TokenUtils utils = new TokenUtils();
+    private final TokenUtils utils;
 
-    public UserService(UserRepository userRepository, TechnicianRepository technicianRepository) {
+    public UserService(UserRepository userRepository, TechnicianRepository technicianRepository, TokenUtils utils) {
         this.userRepository = userRepository;
         this.technicianRepository = technicianRepository;
+        this.utils = utils;
     }
 
     @Transactional
