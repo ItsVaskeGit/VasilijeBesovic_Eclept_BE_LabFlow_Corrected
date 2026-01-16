@@ -13,7 +13,7 @@ public class UserAPI {
 
     private final UserService userService;
 
-    private UserAPI(UserService userService) {
+    public UserAPI(UserService userService) {
         this.userService = userService;
     }
 

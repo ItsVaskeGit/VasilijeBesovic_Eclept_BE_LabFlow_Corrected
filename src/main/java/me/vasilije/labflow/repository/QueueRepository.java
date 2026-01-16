@@ -10,8 +10,8 @@ import java.util.Optional;
 @Repository
 public interface QueueRepository extends JpaRepository<Queue, Long> {
 
-    long countAll();
-
     @Query(value = "SELECT q FROM Queue q ORDER BY q.id DESC")
     Optional<Queue> findFirst();
+
+    Optional<Queue> findTopByOrderByIdAsc();
 }

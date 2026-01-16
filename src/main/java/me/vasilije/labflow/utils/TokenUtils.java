@@ -14,11 +14,11 @@ public class TokenUtils {
     @Value("${jwt.key}")
     private String JWT_SECRET;
 
-    private UserService userService;
-
-    public TokenUtils(UserService userService) {
-        this.userService = userService;
-    }
+//    private UserService userService;
+//
+//    public TokenUtils(UserService userService) {
+//        this.userService = userService;
+//    }
 
     public TokenUtils() {}
 
@@ -32,7 +32,8 @@ public class TokenUtils {
     }
 
     public boolean checkToken(String jwtToken) {
-        return (userService.checkUserExists(getUsername(jwtToken)) && stillValid(jwtToken));
+//        return (userService.checkUserExists(getUsername(jwtToken)) && stillValid(jwtToken));
+        return stillValid(jwtToken);
     }
 
     private boolean stillValid(String jwtToken) {

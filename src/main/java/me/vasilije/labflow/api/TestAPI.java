@@ -2,6 +2,8 @@ package me.vasilije.labflow.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import me.vasilije.labflow.exception.NoMachinesAvailableException;
+import me.vasilije.labflow.exception.TypeNotFoundException;
+import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.model.Test;
 import me.vasilije.labflow.service.MachineService;
 import me.vasilije.labflow.service.TestService;
@@ -14,18 +16,18 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 public class TestAPI {
 
-    private final TokenUtils utils = new TokenUtils();
-
+    private final TokenUtils utils;
     private final TestService testService;
     private final MachineService machineService;
 
-    private TestAPI(TestService testService, MachineService machineService) {
+    public TestAPI(TestService testService, MachineService machineService, TokenUtils utils) {
         this.testService = testService;
         this.machineService = machineService;
+        this.utils = utils;
     }
 
-    @RequestMapping(path = "/schedule/{id}", method = RequestMethod.POST)
-    public ResponseEntity sheduleTest(@PathVariable long id, HttpServletRequest req) {
+    @RequestMapping(path = "/schedule/{id}/{submitTypeId}", method = RequestMethod.POST)
+    public ResponseEntity sheduleTest(@PathVariable long id, @PathVariable long submitTypeId, HttpServletRequest req) {
 
         var jwtToken = req.getHeader("Authorization").split(" ")[1];
 
@@ -34,11 +36,9 @@ public class TestAPI {
         }
 
         try {
-            return testService.scheduleTest(id, utils.getUsername(jwtToken));
-        } catch (NoMachinesAvailableException e) {
-            // If this exception is thrown then all machines are depleted and replacement of the reagents is needed.
-            machineService.replaceReagents();
-            return ResponseEntity.status(503).body("All machines are undergoing maintenance now. Try again in a few minutes.");
+            return testService.addTestToQueue(id, submitTypeId, utils.getUsername(jwtToken));
+        } catch (TypeNotFoundException | UserNotFoundException e) {
+            return ResponseEntity.status(503).body(e.getMessage());
         }
     }
 }

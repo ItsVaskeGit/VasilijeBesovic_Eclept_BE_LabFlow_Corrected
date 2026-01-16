@@ -11,8 +11,10 @@ public class Queue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "test_id", referencedColumnName = "id")
-    public Test test;
+    @ManyToOne
+    public TestType type;
+
+    @ManyToOne
+    public User patient;
 
 }

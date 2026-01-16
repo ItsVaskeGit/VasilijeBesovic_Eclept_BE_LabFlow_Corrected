@@ -2,9 +2,10 @@ package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
 import me.vasilije.labflow.event.ResumeQueueEvent;
-import me.vasilije.labflow.model.Technician;
-import me.vasilije.labflow.model.Test;
+import me.vasilije.labflow.event.TestFinishedEvent;
+import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.repository.MachineRepository;
+import me.vasilije.labflow.repository.QueueRepository;
 import me.vasilije.labflow.repository.TechnicianRepository;
 import me.vasilije.labflow.repository.TestRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,13 +18,16 @@ public class ScheduledTaskService {
     private final MachineRepository machineRepository;
     private final TechnicianRepository technicianRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final QueueRepository queueRepository;
 
     public ScheduledTaskService(MachineRepository machineRepository, TechnicianRepository technicianRepository,
-                                TestRepository testRepository, ApplicationEventPublisher applicationEventPublisher) {
+                                TestRepository testRepository, ApplicationEventPublisher applicationEventPublisher,
+                                QueueRepository queueRepository) {
         this.machineRepository = machineRepository;
         this.technicianRepository = technicianRepository;
         this.testRepository = testRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.queueRepository = queueRepository;
     }
 
     @Transactional
@@ -43,12 +47,15 @@ public class ScheduledTaskService {
     }
 
     @Transactional
-    public void finishTest(long testId, long technicianId) {
+    public void finishTest(long testId, long queueId, long technicianId) {
 
         var test = testRepository.findById(testId).get();
-        var technician = technicianRepository.findById(technicianId).get();
+        var technician = technicianRepository.findById(technicianId).orElseThrow(() -> new UserNotFoundException("Technician was not found"));
+        var entry = queueRepository.findById(queueId).get();
 
         test.setFinished(true);
         technician.setBusy(false);
+
+        applicationEventPublisher.publishEvent(new TestFinishedEvent(this, entry));
     }
 }
