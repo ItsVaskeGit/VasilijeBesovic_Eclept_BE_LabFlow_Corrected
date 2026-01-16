@@ -1,10 +1,14 @@
 package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
+import me.vasilije.labflow.event.NewTestEvent;
+import me.vasilije.labflow.event.ResumeQueueEvent;
+import me.vasilije.labflow.event.StartNewTestEvent;
 import me.vasilije.labflow.exception.NoMachinesAvailableException;
 import me.vasilije.labflow.model.Test;
 import me.vasilije.labflow.model.TestType;
 import me.vasilije.labflow.repository.*;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.TaskScheduler;
@@ -24,18 +28,23 @@ public class TestService {
     private final UserRepository userRepository;
     private final MachineRepository machineRepository;
     private final ScheduledTaskService scheduledTaskService;
+    private final SubmitTypeRepository submitTypeRepository;
+    private final QueueRepository queueRepository;
 
     private final TaskScheduler scheduler = new SimpleAsyncTaskScheduler();
 
     public TestService(TestRepository testRepository, TechnicianRepository technicianRepository,
                        MachineRepository machineRepository, TestTypeRepository typeRepository,
-                       UserRepository userRepository, ScheduledTaskService scheduledTaskService) {
+                       UserRepository userRepository, ScheduledTaskService scheduledTaskService,
+                       SubmitTypeRepository submitTypeRepository, QueueRepository queueRepository) {
         this.testRepository = testRepository;
         this.technicianRepository = technicianRepository;
         this.machineRepository = machineRepository;
         this.typeRepository = typeRepository;
         this.userRepository = userRepository;
         this.scheduledTaskService = scheduledTaskService;
+        this.submitTypeRepository = submitTypeRepository;
+        this.queueRepository = queueRepository;
     }
 
     @Transactional
@@ -77,4 +86,7 @@ public class TestService {
         return typeRepository.findById(id);
     }
 
+    public void startQueue() {
+
+    }
 }

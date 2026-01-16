@@ -25,6 +25,9 @@ public class Test {
     @ManyToOne
     public LabMachine machine;
 
+    @ManyToOne
+    public SubmitType submitType;
+
     private boolean finished;
 
 }
