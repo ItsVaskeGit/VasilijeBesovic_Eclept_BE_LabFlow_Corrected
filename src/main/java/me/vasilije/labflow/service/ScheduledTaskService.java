@@ -47,15 +47,14 @@ public class ScheduledTaskService {
     }
 
     @Transactional
-    public void finishTest(long testId, long queueId, long technicianId) {
+    public void finishTest(long testId, long technicianId) {
 
         var test = testRepository.findById(testId).get();
         var technician = technicianRepository.findById(technicianId).orElseThrow(() -> new UserNotFoundException("Technician was not found"));
-        var entry = queueRepository.findById(queueId).get();
 
         test.setFinished(true);
         technician.setBusy(false);
 
-        applicationEventPublisher.publishEvent(new TestFinishedEvent(this, entry));
+        applicationEventPublisher.publishEvent(new TestFinishedEvent(this));
     }
 }

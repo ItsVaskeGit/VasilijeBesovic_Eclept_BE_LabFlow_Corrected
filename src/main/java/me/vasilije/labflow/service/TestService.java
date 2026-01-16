@@ -67,6 +67,8 @@ public class TestService {
         var patient = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found."));
 
+        var queueEntry = queueRepository.findById(queueId).orElseThrow(() -> new TypeNotFoundException("Queue entry not found."));
+
         var newTest = new Test();
 
         newTest.setType(type);
@@ -81,9 +83,9 @@ public class TestService {
 
         var savedTest = testRepository.save(newTest);
 
-        System.out.println(queueId + " " + availableTechnician.getId());
+        queueRepository.delete(queueEntry);
 
-        scheduler.schedule(() -> scheduledTaskService.finishTest(savedTest.getId(), queueId, availableTechnician.getId()),
+        scheduler.schedule(() -> scheduledTaskService.finishTest(savedTest.getId(), availableTechnician.getId()),
                 Instant.now().plusSeconds(type.getDuration()));
     }
 
@@ -97,16 +99,19 @@ public class TestService {
         var nextTest = queueRepository.findTopByOrderByIdAsc().orElseThrow(() -> new TypeNotFoundException("Next queued test not found."));
         var testType = typeRepository.findById(nextTest.type.getId()).orElseThrow(() -> new TypeNotFoundException("Next test type not found."));
 
-        if(technicianRepository.countReadyTechnicians(testType.getReagentUnitsNeeded()) == 0) {
+        if(!(technicianRepository.countReadyTechnicians(testType.getReagentUnitsNeeded()) == 0)) {
+            isQueueActive = true;
+
+            var patient = userRepository.findById(nextTest.patient.getId()).orElseThrow(() -> new UserNotFoundException("Patient was not found."));
+
+            scheduleTest(testType, nextTest.getId(), patient.getUsername());
+        }
+
+        if(machineRepository.allMachinesDepleted()) {
             isQueueActive = false;
             eventPublisher.publishEvent(new StartReagentReplacementEvent(this));
         }
 
-        isQueueActive = true;
-
-        var patient = userRepository.findById(nextTest.patient.getId()).orElseThrow(() -> new UserNotFoundException("Patient was not found."));
-
-        scheduleTest(testType, nextTest.getId(), patient.getUsername());
     }
 
     public ResponseEntity addTestToQueue(long testId, long submitTypeId, String username) {
@@ -127,8 +132,6 @@ public class TestService {
         var savedEntry = queueRepository.save(entry);
 
         eventPublisher.publishEvent(new NewTestEvent(this));
-
-        System.out.println("Added another one.");
 
         return ResponseEntity.status(200).body(savedEntry);
     }

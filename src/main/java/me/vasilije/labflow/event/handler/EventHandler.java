@@ -46,10 +46,7 @@ public class EventHandler {
     private void handleTestFinishedEvent(TestFinishedEvent event) {
         if(queueRepository.count() > 0) {
             testService.startQueue();
-            System.out.println(queueRepository.count());
         }
-
-        queueRepository.delete(event.getQueue());
     }
 
     @EventListener
