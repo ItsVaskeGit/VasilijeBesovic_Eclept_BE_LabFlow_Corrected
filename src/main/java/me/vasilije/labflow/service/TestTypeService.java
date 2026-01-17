@@ -27,7 +27,7 @@ public class TestTypeService {
     @Transactional
     public ResponseEntity createNewTestType(TestTypeDTO newTest, String jwtToken) {
 
-        if(!utils.checkToken(jwtToken)) {
+        if(!utils.stillValid(jwtToken)) {
             return ResponseEntity.status(401).body("Your token is expired or invalid.");
         }
 
@@ -49,7 +49,7 @@ public class TestTypeService {
     @Transactional
     public ResponseEntity modifyTestType(TestTypeDTO newTest, String jwtToken) {
 
-        if(!utils.checkToken(jwtToken)) {
+        if(!utils.stillValid(jwtToken)) {
             return ResponseEntity.status(401).body("Your token is expired or invalid.");
         }
 
@@ -71,7 +71,7 @@ public class TestTypeService {
     @Transactional
     public ResponseEntity deleteTestType(long id, String jwtToken) {
 
-        if(!utils.checkToken(jwtToken)) {
+        if(!utils.stillValid(jwtToken)) {
             return ResponseEntity.status(401).body("Your token is expired or invalid.");
         }
 

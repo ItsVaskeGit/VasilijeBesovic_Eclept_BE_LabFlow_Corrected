@@ -61,7 +61,7 @@ public class TestService {
 
     public ResponseEntity checkTest(long id, String jwtToken) {
 
-        if(!utils.checkToken(jwtToken)) {
+        if(!utils.stillValid(jwtToken)) {
             return ResponseEntity.status(401).body("You are not logged in or your session has expired.");
         }
 
@@ -77,7 +77,7 @@ public class TestService {
 
     public ResponseEntity checkPatientTests(String jwtToken) {
 
-        if(!utils.checkToken(jwtToken)) {
+        if(!utils.stillValid(jwtToken)) {
             return ResponseEntity.status(401).body("You are not logged in or your session has expired.");
         }
 
@@ -89,8 +89,8 @@ public class TestService {
 
     public ResponseEntity getTestsPaginate(int pageNumber, int perPage, String jwtToken) {
 
-        if(!utils.checkToken(jwtToken)) {
-            return ResponseEntity.status(401).body("You are not login or your session has expired.");
+        if(!utils.stillValid(jwtToken)) {
+            return ResponseEntity.status(401).body("You are not logged in or your session has expired.");
         }
 
         var user = userRepository.findByUsername(utils.getUsername(jwtToken)).orElseThrow(() -> new UserNotFoundException("User not found."));

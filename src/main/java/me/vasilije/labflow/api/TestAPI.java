@@ -56,7 +56,7 @@ public class TestAPI {
 
         var jwtToken = req.getHeader("Authorization").split(" ")[1];
 
-        if(!utils.checkToken(jwtToken)) {
+        if(!utils.stillValid(jwtToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not logged in.");
         }
 
