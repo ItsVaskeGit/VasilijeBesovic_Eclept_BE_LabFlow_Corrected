@@ -21,4 +21,8 @@ public class Technician {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "machine_id", referencedColumnName = "id")
     public LabMachine labMachine;
+
+    @ManyToOne
+    @JoinColumn(name = "hospital_id", nullable = false)
+    public Hospital hospital;
 }

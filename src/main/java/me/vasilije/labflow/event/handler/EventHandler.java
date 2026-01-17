@@ -1,7 +1,7 @@
 package me.vasilije.labflow.event.handler;
 
 import me.vasilije.labflow.event.*;
-import me.vasilije.labflow.repository.QueueRepository;
+import me.vasilije.labflow.repository.QueueEntryRepository;
 import me.vasilije.labflow.service.MachineService;
 import me.vasilije.labflow.service.TestService;
 import org.springframework.context.event.EventListener;
@@ -12,18 +12,18 @@ public class EventHandler {
 
     private final MachineService machineService;
     private final TestService testService;
-    private final QueueRepository queueRepository;
+    private final QueueEntryRepository queueEntryRepository;
 
     public EventHandler(MachineService machineService, TestService testService,
-                        QueueRepository queueRepository) {
+                        QueueEntryRepository queueEntryRepository) {
         this.machineService = machineService;
         this.testService = testService;
-        this.queueRepository = queueRepository;
+        this.queueEntryRepository = queueEntryRepository;
     }
 
     @EventListener
     private void handleResumeEvent(ResumeQueueEvent event) {
-        if(queueRepository.count() > 0) {
+        if(queueEntryRepository.count() > 0) {
             testService.startQueue();
         }
     }
@@ -37,14 +37,14 @@ public class EventHandler {
 
     @EventListener
     private void handleStartNewTestEvent(StartNewTestEvent event) {
-        if(queueRepository.count() > 0) {
+        if(queueEntryRepository.count() > 0) {
             testService.startQueue();
         }
     }
 
     @EventListener
     private void handleTestFinishedEvent(TestFinishedEvent event) {
-        if(queueRepository.count() > 0) {
+        if(queueEntryRepository.count() > 0) {
             testService.startQueue();
         }
     }

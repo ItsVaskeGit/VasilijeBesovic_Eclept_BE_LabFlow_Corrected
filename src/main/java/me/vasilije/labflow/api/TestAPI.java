@@ -51,8 +51,8 @@ public class TestAPI {
         }
     }
 
-    @RequestMapping(path = "/schedule/{id}/{submitTypeId}", method = RequestMethod.POST)
-    public ResponseEntity scheduleTest(@PathVariable long id, @PathVariable long submitTypeId, HttpServletRequest req) {
+    @RequestMapping(path = "/schedule/{hospitalId}/{id}/{submitTypeId}", method = RequestMethod.POST)
+    public ResponseEntity scheduleTest(@PathVariable long hospitalId ,@PathVariable long id, @PathVariable long submitTypeId, HttpServletRequest req) {
 
         var jwtToken = req.getHeader("Authorization").split(" ")[1];
 
@@ -61,7 +61,7 @@ public class TestAPI {
         }
 
         try {
-            return testService.addTestToQueue(id, submitTypeId, utils.getUsername(jwtToken));
+            return testService.addTestToQueue(id, submitTypeId, hospitalId, utils.getUsername(jwtToken));
         } catch (TypeNotFoundException | UserNotFoundException e) {
             return ResponseEntity.status(503).body(e.getMessage());
         }

@@ -6,14 +6,13 @@ import me.vasilije.labflow.event.StartReagentReplacementEvent;
 import me.vasilije.labflow.exception.NoMachinesAvailableException;
 import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.exception.UserNotFoundException;
-import me.vasilije.labflow.model.Queue;
+import me.vasilije.labflow.model.QueueEntry;
 import me.vasilije.labflow.model.Test;
 import me.vasilije.labflow.model.TestType;
 import me.vasilije.labflow.repository.*;
 import me.vasilije.labflow.utils.TokenUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.TaskScheduler;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @Service
 public class TestService {
@@ -34,7 +32,9 @@ public class TestService {
     private final MachineRepository machineRepository;
     private final ScheduledTaskService scheduledTaskService;
     private final SubmitTypeRepository submitTypeRepository;
+    private final QueueEntryRepository queueEntryRepository;
     private final QueueRepository queueRepository;
+    private final HospitalRepository hospitalRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final TokenUtils utils;
 
@@ -45,8 +45,9 @@ public class TestService {
     public TestService(TestRepository testRepository, TechnicianRepository technicianRepository,
                        MachineRepository machineRepository, TestTypeRepository typeRepository,
                        UserRepository userRepository, ScheduledTaskService scheduledTaskService,
-                       SubmitTypeRepository submitTypeRepository, QueueRepository queueRepository,
-                       ApplicationEventPublisher eventPublisher, TokenUtils utils) {
+                       SubmitTypeRepository submitTypeRepository, QueueEntryRepository queueEntryRepository,
+                       ApplicationEventPublisher eventPublisher, QueueRepository queueRepository,
+                       HospitalRepository hospitalRepository, TokenUtils utils) {
         this.testRepository = testRepository;
         this.technicianRepository = technicianRepository;
         this.machineRepository = machineRepository;
@@ -54,8 +55,10 @@ public class TestService {
         this.userRepository = userRepository;
         this.scheduledTaskService = scheduledTaskService;
         this.submitTypeRepository = submitTypeRepository;
-        this.queueRepository = queueRepository;
+        this.queueEntryRepository = queueEntryRepository;
         this.eventPublisher = eventPublisher;
+        this.queueRepository = queueRepository;
+        this.hospitalRepository = hospitalRepository;
         this.utils = utils;
     }
 
@@ -102,22 +105,27 @@ public class TestService {
         return ResponseEntity.status(200).body(testRepository.getTests(PageRequest.of(pageNumber, perPage)));
     }
 
-    public ResponseEntity addTestToQueue(long testId, long submitTypeId, String username) {
+    public ResponseEntity addTestToQueue(long testId, long submitTypeId, long hospitalId, String username) {
 
         var submitType = submitTypeRepository.findById(submitTypeId).orElseThrow(() -> new TypeNotFoundException("Submit type not found."));
 
         var testType = typeRepository.findById(testId).orElseThrow(() -> new TypeNotFoundException("Test type not found"));
 
-        if(!submitType.isPriority() && queueRepository.count() >= 20) {
+        var hospital = hospitalRepository.findById(hospitalId).orElseThrow(() -> new TypeNotFoundException("Hospital not found"));
+
+        var queue = queueRepository.findByHospital(hospital).orElseThrow(() -> new TypeNotFoundException("That hospital does not have a queue."));
+
+        if(!submitType.isPriority() && queueEntryRepository.count() >= 20) {
             return ResponseEntity.status(503).body("Queue is full. Try again later.");
         }
 
-        var entry = new Queue();
+        var entry = new QueueEntry();
 
         entry.setType(testType);
         entry.setPatient(userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User does not exist.")));
+        entry.setQueue(queue);
 
-        var savedEntry = queueRepository.save(entry);
+        var savedEntry = queueEntryRepository.save(entry);
 
         eventPublisher.publishEvent(new NewTestEvent(this));
 
@@ -127,15 +135,15 @@ public class TestService {
     @Transactional
     public void startQueue() {
 
-        var nextTest = queueRepository.findTopByOrderByIdAsc().orElseThrow(() -> new TypeNotFoundException("Next queued test not found."));
+        var nextTest = queueEntryRepository.findTopByQueueOrderByIdAsc().orElseThrow(() -> new TypeNotFoundException("Next queued test not found."));
         var testType = typeRepository.findById(nextTest.type.getId()).orElseThrow(() -> new TypeNotFoundException("Next test type not found."));
 
-        if(!(technicianRepository.countReadyTechnicians(testType.getReagentUnitsNeeded()) == 0)) {
+        if(!(technicianRepository.countReadyTechnicians(testType.getReagentUnitsNeeded(), nextTest.queue.hospital.getId()) == 0)) {
             isQueueActive = true;
 
             var patient = userRepository.findById(nextTest.patient.getId()).orElseThrow(() -> new UserNotFoundException("Patient was not found."));
 
-            scheduleTest(testType, nextTest.getId(), patient.getUsername());
+            scheduleTest(testType, nextTest.queue.hospital.getId(), nextTest.getId(), patient.getUsername());
         }
 
         if(machineRepository.allMachinesDepleted()) {
@@ -146,9 +154,9 @@ public class TestService {
     }
 
     @Transactional
-    public void scheduleTest(TestType type, long queueId, String username) throws ResponseStatusException, NoMachinesAvailableException {
+    public void scheduleTest(TestType type, long hospitalId, long queueId, String username) throws ResponseStatusException, NoMachinesAvailableException {
 
-        var availableTechnician = technicianRepository.findFreeTechniciansWithAvailableMachines(type.getReagentUnitsNeeded())
+        var availableTechnician = technicianRepository.findFreeTechniciansWithAvailableMachines(type.getReagentUnitsNeeded(), hospitalId)
                 .orElseThrow(() -> new NoMachinesAvailableException("There are no machines available now.")).getFirst();
 
         var availableMachine = machineRepository.getByTechnician(availableTechnician)
@@ -157,7 +165,7 @@ public class TestService {
         var patient = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found."));
 
-        var queueEntry = queueRepository.findById(queueId).orElseThrow(() -> new TypeNotFoundException("Queue entry not found."));
+        var queueEntry = queueEntryRepository.findById(queueId).orElseThrow(() -> new TypeNotFoundException("Queue entry not found."));
 
         var newTest = new Test();
 
@@ -173,7 +181,7 @@ public class TestService {
 
         var savedTest = testRepository.save(newTest);
 
-        queueRepository.delete(queueEntry);
+        queueEntryRepository.delete(queueEntry);
 
         scheduler.schedule(() -> scheduledTaskService.finishTest(savedTest.getId(), availableTechnician.getId()),
                 Instant.now().plusSeconds(type.getDuration()));

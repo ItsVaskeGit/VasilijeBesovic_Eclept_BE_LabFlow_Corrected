@@ -7,15 +7,12 @@ import java.util.List;
 
 @Entity
 @Data
-public class Queue {
+public class Hospital {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public long id;
+    private long id;
 
-    @OneToMany(mappedBy = "queue")
-    public List<QueueEntry> entries;
-
-    @ManyToOne
-    public Hospital hospital;
+    @OneToMany(mappedBy = "hospital")
+    public List<Technician> technicians;
 }

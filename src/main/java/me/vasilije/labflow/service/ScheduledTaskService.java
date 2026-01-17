@@ -5,7 +5,7 @@ import me.vasilije.labflow.event.ResumeQueueEvent;
 import me.vasilije.labflow.event.TestFinishedEvent;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.repository.MachineRepository;
-import me.vasilije.labflow.repository.QueueRepository;
+import me.vasilije.labflow.repository.QueueEntryRepository;
 import me.vasilije.labflow.repository.TechnicianRepository;
 import me.vasilije.labflow.repository.TestRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -18,16 +18,16 @@ public class ScheduledTaskService {
     private final MachineRepository machineRepository;
     private final TechnicianRepository technicianRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final QueueRepository queueRepository;
+    private final QueueEntryRepository queueEntryRepository;
 
     public ScheduledTaskService(MachineRepository machineRepository, TechnicianRepository technicianRepository,
                                 TestRepository testRepository, ApplicationEventPublisher applicationEventPublisher,
-                                QueueRepository queueRepository) {
+                                QueueEntryRepository queueEntryRepository) {
         this.machineRepository = machineRepository;
         this.technicianRepository = technicianRepository;
         this.testRepository = testRepository;
         this.applicationEventPublisher = applicationEventPublisher;
-        this.queueRepository = queueRepository;
+        this.queueEntryRepository = queueEntryRepository;
     }
 
     @Transactional
