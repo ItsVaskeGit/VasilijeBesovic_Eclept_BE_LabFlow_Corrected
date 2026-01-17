@@ -127,28 +127,33 @@ public class TestService {
 
         var savedEntry = queueEntryRepository.save(entry);
 
-        eventPublisher.publishEvent(new NewTestEvent(this));
+        eventPublisher.publishEvent(new NewTestEvent(this, hospitalId, queue.getId()));
 
         return ResponseEntity.status(200).body(savedEntry);
     }
 
     @Transactional
-    public void startQueue() {
+    public void startQueue(long hospitalId) {
 
-        var nextTest = queueEntryRepository.findTopByQueueOrderByIdAsc().orElseThrow(() -> new TypeNotFoundException("Next queued test not found."));
+        var hospital = hospitalRepository.findById(hospitalId).orElseThrow(() -> new TypeNotFoundException("Hospital does not exist."));
+
+        var queue = queueRepository.findByHospital(hospital).orElseThrow(() -> new TypeNotFoundException("Queue was not found"));
+
+        var nextTest = queueEntryRepository.findTopByQueueOrderByIdAsc(queue).orElseThrow(() -> new TypeNotFoundException("Next queued test not found."));
         var testType = typeRepository.findById(nextTest.type.getId()).orElseThrow(() -> new TypeNotFoundException("Next test type not found."));
 
-        if(!(technicianRepository.countReadyTechnicians(testType.getReagentUnitsNeeded(), nextTest.queue.hospital.getId()) == 0)) {
-            isQueueActive = true;
+        if(!(technicianRepository.countReadyTechnicians(testType.getReagentUnitsNeeded(), hospitalId) == 0)) {
+
+            queue.active = true;
 
             var patient = userRepository.findById(nextTest.patient.getId()).orElseThrow(() -> new UserNotFoundException("Patient was not found."));
 
-            scheduleTest(testType, nextTest.queue.hospital.getId(), nextTest.getId(), patient.getUsername());
+            scheduleTest(testType, hospitalId, nextTest.getId(), patient.getUsername());
         }
 
         if(machineRepository.allMachinesDepleted()) {
-            isQueueActive = false;
-            eventPublisher.publishEvent(new StartReagentReplacementEvent(this));
+            queue.active = false;
+            eventPublisher.publishEvent(new StartReagentReplacementEvent(this, hospitalId));
         }
 
     }

@@ -11,8 +11,13 @@ public class Hospital {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    public long id;
+
+    public String name;
 
     @OneToMany(mappedBy = "hospital")
     public List<Technician> technicians;
+
+    @OneToOne(mappedBy = "hospital")
+    public Queue queue;
 }

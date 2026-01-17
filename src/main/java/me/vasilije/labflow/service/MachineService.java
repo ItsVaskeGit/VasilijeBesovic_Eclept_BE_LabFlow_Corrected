@@ -26,13 +26,13 @@ public class MachineService {
     }
 
     @Transactional
-    public void replaceReagents() {
+    public void replaceReagents(long hospitalId) {
         var technicians = technicianRepository.findAll();
         for(var technician : technicians) {
             technician.setBusy(true);
         }
 
-        scheduler.schedule(scheduledTaskService::startReagentReplacement, Instant.now().plusSeconds(240));
+        scheduler.schedule(() -> scheduledTaskService.startReagentReplacement(hospitalId), Instant.now().plusSeconds(240));
     }
 
 }

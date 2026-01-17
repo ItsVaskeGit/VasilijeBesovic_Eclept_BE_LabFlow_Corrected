@@ -13,9 +13,13 @@ public class Queue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public long id;
 
+    public boolean active;
+
     @OneToMany(mappedBy = "queue")
     public List<QueueEntry> entries;
 
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "hospital_id", referencedColumnName = "id")
     public Hospital hospital;
+
 }

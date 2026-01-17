@@ -1,5 +1,6 @@
 package me.vasilije.labflow.repository;
 
+import me.vasilije.labflow.model.Hospital;
 import me.vasilije.labflow.model.Technician;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,4 +17,6 @@ public interface TechnicianRepository extends JpaRepository<Technician, Long> {
 
     @Query(value = "SELECT COUNT(t) FROM Technician t JOIN t.labMachine m WHERE t.isBusy = false AND m.reagentUnits >= ?1 AND t.hospital.id = ?2")
     long countReadyTechnicians(int reagentUnitsNeeded, long hospitalId);
+
+    Optional<List<Technician>> findByHospital(Hospital hospital);
 }
