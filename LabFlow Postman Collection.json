@@ -1,0 +1,336 @@
+{
+  "info": {
+    "_postman_id": "42aba033-b80a-45c8-8e51-c4fef9828494",
+    "name": "LabFlow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33568383"
+  },
+  "item": [
+    {
+      "name": "Schedule a Test(Params: /{hospitalId}/{id}/{submitTypeId})",
+      "request": {
+        "method": "POST",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Check a single Test by Providing an Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/check/1",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "check",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check All Tests for a single User(Patient)",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Test Type as Admin",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZWtvIiwiaWF0IjoxNzY4OTExODU1LCJleHAiOjE3Njg5MTU0NTV9.DwGcLKHgnKh_-0wcmkF5BqLORggO62sHNB0wcgVWxXY",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/delete/1",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "delete",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Modify Test Type as Admin",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"id\": 1,\r\n    \"name\": \"Allergy Panel\",\r\n    \"duration\": 240,\r\n    \"reagentsNeeded\": 150\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/modify",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "modify"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create New Test Type as Admin",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZWtvIiwiaWF0IjoxNzY4OTExODU1LCJleHAiOjE3Njg5MTU0NTV9.DwGcLKHgnKh_-0wcmkF5BqLORggO62sHNB0wcgVWxXY",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Allergy Panel\",\r\n    \"duration\": 240,\r\n    \"reagentsNeeded\": 150\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/create",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "create"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check all tests as Admin, Paginate",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZWtvIiwiaWF0IjoxNzY4NjUzMjQzLCJleHAiOjE3Njg2NTY4NDN9.gNaIOFxxgw3EMfcU9JlCoZNvgvoC9XWGiSFkQ98TVz0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/tests/0/25",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "tests",
+            "0",
+            "25"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Assign Lab Machine",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/assign/1/1",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "assign",
+            "1",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create a new Lab Machine",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/machine",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "machine"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create a new hosptial",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/hospital",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "hospital"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add test to queue",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZWtvIiwiaWF0IjoxNzY4NjAwMDYwLCJleHAiOjE3Njg2MDM2NjB9.vM_JyK_uYDInqFnNcc1li_UC7R01ZRZcIA4__0f2OLA",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/schedule/1/1",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "schedule",
+            "1",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Promote user to Admin",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/promote/neko",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "promote",
+            "neko"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"neko\",\r\n    \"password\": \"nesto\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/login",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Registration",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"neko\",\r\n    \"password\": \"nesto\",\r\n    \"isTechnician\": true,\r\n    \"hospitalId\": 1\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/register",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "register"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
