@@ -1,5 +1,6 @@
 package me.vasilije.labflow.event.handler;
 
+import jakarta.transaction.Transactional;
 import me.vasilije.labflow.event.*;
 import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.repository.QueueEntryRepository;
@@ -56,12 +57,14 @@ public class EventHandler {
     }
 
     @EventListener
-    private void handleTestFinishedEvent(TestFinishedEvent event) {
+    protected void handleTestFinishedEvent(TestFinishedEvent event) {
 
         var queue = queueRepository.findById(event.getQueueId()).orElseThrow(() -> new TypeNotFoundException("Queue not found."));
 
         if(queueEntryRepository.countQueueEntryByQueue(queue) > 0) {
             testService.startQueue(event.getHospitalId());
+        }else {
+            queue.setActive(false);
         }
     }
 

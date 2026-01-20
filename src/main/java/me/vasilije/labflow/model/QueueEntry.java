@@ -1,5 +1,6 @@
 package me.vasilije.labflow.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,6 +18,7 @@ public class QueueEntry {
     @ManyToOne
     public User patient;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "queue_id", nullable = false)
     public Queue queue;

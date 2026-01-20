@@ -1,9 +1,13 @@
 package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
+import me.vasilije.labflow.dto.LoginDTO;
+import me.vasilije.labflow.dto.RegisterDTO;
+import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.model.Technician;
 import me.vasilije.labflow.model.User;
+import me.vasilije.labflow.repository.HospitalRepository;
 import me.vasilije.labflow.repository.TechnicianRepository;
 import me.vasilije.labflow.repository.UserRepository;
 import me.vasilije.labflow.utils.TokenUtils;
@@ -19,35 +23,41 @@ public class UserService {
 
     private final TechnicianRepository technicianRepository;
 
+    private final HospitalRepository hospitalRepository;
+
     private final TokenUtils utils;
 
-    public UserService(UserRepository userRepository, TechnicianRepository technicianRepository, TokenUtils utils) {
+    public UserService(UserRepository userRepository, TechnicianRepository technicianRepository, HospitalRepository hospitalRepository, TokenUtils utils) {
         this.userRepository = userRepository;
         this.technicianRepository = technicianRepository;
+        this.hospitalRepository = hospitalRepository;
         this.utils = utils;
     }
 
     @Transactional
-    public ResponseEntity registerNewUser(String username, String unhashedPassword, boolean isTechnician) {
+    public ResponseEntity registerNewUser(RegisterDTO register, boolean isTechnician) {
 
-        if(checkUserExists(username)) {
+        if(userRepository.existsByUsername(register.getUsername())) {
             return ResponseEntity.status(400).body("User with that username already exists.");
         }
 
         var newUser = new User();
 
-        newUser.setUsername(username);
-        newUser.setPassword(BCrypt.hashpw(unhashedPassword, BCrypt.gensalt()));
+        newUser.setUsername(register.getUsername());
+        newUser.setPassword(BCrypt.hashpw(register.getPassword(), BCrypt.gensalt()));
         newUser.setTechnician(isTechnician);
         newUser.setAdmin(false);
 
         var savedUser = userRepository.save(newUser);
+
+        var hospital = hospitalRepository.findById(register.getHospitalId()).orElseThrow(() -> new TypeNotFoundException("Hospital was not found."));
 
         if(isTechnician) {
 
             var newTechnician = new Technician();
             newTechnician.setBusy(false);
             newTechnician.setUser(savedUser);
+            newTechnician.setHospital(hospital);
 
             technicianRepository.save(newTechnician);
         }
@@ -55,19 +65,19 @@ public class UserService {
         return ResponseEntity.status(200).body(savedUser);
     }
 
-    public ResponseEntity login(String username, String password) throws ResponseStatusException {
+    public ResponseEntity login(LoginDTO login) throws ResponseStatusException {
 
-        if(!checkUserExists(username)) {
+        if(!userRepository.existsByUsername(login.getUsername())) {
             return ResponseEntity.status(401).body("Invalid username or password.");
         }
 
-        var user = userRepository.findByUsername(username).get();
+        var user = userRepository.findByUsername(login.getUsername()).get();
 
-        if(!BCrypt.checkpw(password, user.getPassword())) {
+        if(!BCrypt.checkpw(login.getPassword(), user.getPassword())) {
             return ResponseEntity.status(401).body("Invalid username or password.");
         }
 
-        return ResponseEntity.status(200).body(utils.fetchToken(username));
+        return ResponseEntity.status(200).body(utils.fetchToken(login.getUsername()));
     }
 
     @Transactional
@@ -79,7 +89,7 @@ public class UserService {
             return ResponseEntity.status(401).body("Current user is not authenticated.");
         }
 
-        if(!checkUserExists(username)) {
+        if(!userRepository.existsByUsername(username)) {
             return ResponseEntity.status(404).body("User not found.");
         }
 
@@ -88,9 +98,5 @@ public class UserService {
         user.setAdmin(true);
 
         return ResponseEntity.status(200).build();
-    }
-
-    public boolean checkUserExists(String username) {
-        return userRepository.existsByUsername(username);
     }
 }

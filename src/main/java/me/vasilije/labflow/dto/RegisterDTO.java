@@ -10,5 +10,6 @@ public class RegisterDTO {
     private String password;
     @JsonProperty
     private boolean isTechnician;
+    private long hospitalId;
 
 }

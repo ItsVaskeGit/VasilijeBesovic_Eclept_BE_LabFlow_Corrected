@@ -13,7 +13,6 @@ import me.vasilije.labflow.repository.*;
 import me.vasilije.labflow.utils.TokenUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
@@ -115,7 +114,7 @@ public class TestService {
 
         var queue = queueRepository.findByHospital(hospital).orElseThrow(() -> new TypeNotFoundException("That hospital does not have a queue."));
 
-        if(!submitType.isPriority() && queueEntryRepository.count() >= 20) {
+        if(!submitType.isPriority() && queueEntryRepository.countQueueEntryByQueue(queue) >= 20) {
             return ResponseEntity.status(503).body("Queue is full. Try again later.");
         }
 
@@ -165,10 +164,10 @@ public class TestService {
                 .orElseThrow(() -> new NoMachinesAvailableException("There are no machines available now.")).getFirst();
 
         var availableMachine = machineRepository.getByTechnician(availableTechnician)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Internal error."));
+                .orElseThrow(() -> new TypeNotFoundException("Error, machine not found."));
 
         var patient = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found."));
+                .orElseThrow(() -> new UserNotFoundException("User not found."));
 
         var queueEntry = queueEntryRepository.findById(queueId).orElseThrow(() -> new TypeNotFoundException("Queue entry not found."));
 

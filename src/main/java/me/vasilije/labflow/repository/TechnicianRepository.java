@@ -2,6 +2,7 @@ package me.vasilije.labflow.repository;
 
 import me.vasilije.labflow.model.Hospital;
 import me.vasilije.labflow.model.Technician;
+import me.vasilije.labflow.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,4 +20,6 @@ public interface TechnicianRepository extends JpaRepository<Technician, Long> {
     long countReadyTechnicians(int reagentUnitsNeeded, long hospitalId);
 
     Optional<List<Technician>> findByHospital(Hospital hospital);
+
+    Optional<Technician> findByUser(User user);
 }

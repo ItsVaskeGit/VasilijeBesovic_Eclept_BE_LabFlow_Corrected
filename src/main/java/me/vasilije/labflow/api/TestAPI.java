@@ -27,10 +27,12 @@ public class TestAPI {
     @RequestMapping(path = "/check", method = RequestMethod.GET)
     public ResponseEntity checkPatientTests(HttpServletRequest req) {
 
-        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+        if(!utils.requestHasToken(req)) {
+            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
+        }
 
         try {
-            return testService.checkPatientTests(jwtToken);
+            return testService.checkPatientTests(utils.getToken(req));
         }catch (UserNotFoundException e) {
             return ResponseEntity.status(401).body(e.getMessage());
         }catch (TypeNotFoundException e) {
@@ -42,10 +44,12 @@ public class TestAPI {
     @RequestMapping(path = "/check/{id}", method = RequestMethod.GET)
     public ResponseEntity checkTest(@PathVariable long id, HttpServletRequest req) {
 
-        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+        if(!utils.requestHasToken(req)) {
+            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
+        }
 
         try {
-            return testService.checkTest(id, jwtToken);
+            return testService.checkTest(id, utils.getToken(req));
         }catch (TypeNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
@@ -54,14 +58,16 @@ public class TestAPI {
     @RequestMapping(path = "/schedule/{hospitalId}/{id}/{submitTypeId}", method = RequestMethod.POST)
     public ResponseEntity scheduleTest(@PathVariable long hospitalId ,@PathVariable long id, @PathVariable long submitTypeId, HttpServletRequest req) {
 
-        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+        if(!utils.requestHasToken(req)) {
+            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
+        }
 
-        if(!utils.stillValid(jwtToken)) {
+        if(!utils.stillValid(utils.getToken(req))) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not logged in.");
         }
 
         try {
-            return testService.addTestToQueue(id, submitTypeId, hospitalId, utils.getUsername(jwtToken));
+            return testService.addTestToQueue(id, submitTypeId, hospitalId, utils.getUsername(utils.getToken(req)));
         } catch (TypeNotFoundException | UserNotFoundException e) {
             return ResponseEntity.status(503).body(e.getMessage());
         }

@@ -22,6 +22,7 @@ public class Technician {
     @JoinColumn(name = "machine_id", referencedColumnName = "id")
     public LabMachine labMachine;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "hospital_id", nullable = false)
     public Hospital hospital;

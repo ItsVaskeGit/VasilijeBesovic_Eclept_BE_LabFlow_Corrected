@@ -5,6 +5,8 @@ import me.vasilije.labflow.dto.TestTypeDTO;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.service.TestService;
 import me.vasilije.labflow.service.TestTypeService;
+import me.vasilije.labflow.utils.TokenUtils;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,20 +15,23 @@ public class AdminAPI {
 
     private final TestTypeService testTypeService;
     private final TestService testService;
+    private final TokenUtils utils;
 
-    public AdminAPI(TestTypeService testTypeService, TestService testService) {
+    public AdminAPI(TestTypeService testTypeService, TestService testService, TokenUtils utils) {
         this.testTypeService = testTypeService;
         this.testService = testService;
-
+        this.utils = utils;
     }
 
     @RequestMapping(path = "/create", method = RequestMethod.POST)
     public ResponseEntity create(@RequestBody TestTypeDTO newTestType, HttpServletRequest req) {
 
-        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+        if(!utils.requestHasToken(req)) {
+            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
+        }
 
         try {
-            return testTypeService.createNewTestType(newTestType, jwtToken);
+            return testTypeService.createNewTestType(newTestType, utils.getToken(req));
         }catch(UserNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
@@ -35,10 +40,12 @@ public class AdminAPI {
     @RequestMapping(path = "/modify", method = RequestMethod.PUT)
     public ResponseEntity modify(@RequestBody TestTypeDTO modifiedTestType, HttpServletRequest req) {
 
-        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+        if(!utils.requestHasToken(req)) {
+            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
+        }
 
         try {
-            return testTypeService.modifyTestType(modifiedTestType, jwtToken);
+            return testTypeService.modifyTestType(modifiedTestType, utils.getToken(req));
         }catch(UserNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
@@ -47,10 +54,12 @@ public class AdminAPI {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.DELETE)
     public ResponseEntity delete(@PathVariable long id, HttpServletRequest req) {
 
-        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+        if(!utils.requestHasToken(req)) {
+            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
+        }
 
         try {
-            return testTypeService.deleteTestType(id, jwtToken);
+            return testTypeService.deleteTestType(id, utils.getToken(req));
         }catch(UserNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
@@ -59,10 +68,12 @@ public class AdminAPI {
     @RequestMapping(path = "/tests/{pageNumber}/{perPage}", method = RequestMethod.GET)
     public ResponseEntity getTests(@PathVariable int pageNumber, @PathVariable int perPage, HttpServletRequest req) {
 
-        var jwtToken = req.getHeader("Authorization").split(" ")[1];
+        if(!utils.requestHasToken(req)) {
+            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
+        }
 
         try {
-            return testService.getTestsPaginate(pageNumber, perPage, jwtToken);
+            return testService.getTestsPaginate(pageNumber, perPage, utils.getToken(req));
         }catch (UserNotFoundException e) {
             return ResponseEntity.status(401).body(e.getMessage());
         }
