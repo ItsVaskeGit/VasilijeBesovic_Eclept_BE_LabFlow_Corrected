@@ -25,3 +25,5 @@ services:
       - POSTGRES_DB=labflow
     command:
       - -p 5433
+    volumes:
+      - './dump.sql:/docker-entrypoint-intitdb.d/dump.sql'
