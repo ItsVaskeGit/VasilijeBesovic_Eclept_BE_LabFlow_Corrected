@@ -71,6 +71,6 @@ public class ScheduledTaskService {
         test.setFinished(true);
         technician.setBusy(false);
 
-        applicationEventPublisher.publishEvent(new TestFinishedEvent(this, technician.hospital.getId(), queue.getId()));
+        applicationEventPublisher.publishEvent(new TestFinishedEvent(this, technician.hospital.getId(), queue.getId(), test));
     }
 }
