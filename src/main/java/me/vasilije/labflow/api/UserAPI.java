@@ -27,7 +27,7 @@ public class UserAPI {
 
     @RequestMapping(path = "/register", method = RequestMethod.POST)
     public ResponseEntity register(@RequestBody RegisterDTO register) {
-        return userService.registerNewUser(register, register.isTechnician());
+        return userService.registerNewUser(register);
     }
 
     @RequestMapping(path = "/promote/{username}", method = RequestMethod.PUT)

@@ -1,10 +1,27 @@
-version: '1.0'
-
 services:
+  app:
+    container_name: LabFlow
+    image: springboot-backend
+    build: ./
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - spring.datasource.url=jdbc:postgresql://db:5433/labflow
+      - spring.datasource.username=postgres
+      - spring.datasource.password=123456
+      - spring.jpa.hibernate.ddl-auto=none
+      - spring.jpa.show-sql=true
   db:
     image: postgres
     ports:
-      - "5432:5432"
+      - "5433:5433"
+    expose:
+      - 5433
     environment:
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: labflow
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=labflow
+    command:
+      - -p 5433

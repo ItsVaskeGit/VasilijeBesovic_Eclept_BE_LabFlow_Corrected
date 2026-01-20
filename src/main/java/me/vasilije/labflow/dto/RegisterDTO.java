@@ -8,8 +8,10 @@ public class RegisterDTO {
 
     private String username;
     private String password;
+
     @JsonProperty
     private boolean isTechnician;
+
     private long hospitalId;
 
 }

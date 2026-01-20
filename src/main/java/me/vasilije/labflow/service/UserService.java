@@ -35,7 +35,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity registerNewUser(RegisterDTO register, boolean isTechnician) {
+    public ResponseEntity registerNewUser(RegisterDTO register) {
 
         if(userRepository.existsByUsername(register.getUsername())) {
             return ResponseEntity.status(400).body("User with that username already exists.");
@@ -45,15 +45,13 @@ public class UserService {
 
         newUser.setUsername(register.getUsername());
         newUser.setPassword(BCrypt.hashpw(register.getPassword(), BCrypt.gensalt()));
-        newUser.setTechnician(isTechnician);
+        newUser.setTechnician(register.isTechnician());
         newUser.setAdmin(false);
 
         var savedUser = userRepository.save(newUser);
 
-        var hospital = hospitalRepository.findById(register.getHospitalId()).orElseThrow(() -> new TypeNotFoundException("Hospital was not found."));
-
-        if(isTechnician) {
-
+        if(register.isTechnician()) {
+            var hospital = hospitalRepository.findById(register.getHospitalId()).orElseThrow(() -> new TypeNotFoundException("Hospital was not found."));
             var newTechnician = new Technician();
             newTechnician.setBusy(false);
             newTechnician.setUser(savedUser);
