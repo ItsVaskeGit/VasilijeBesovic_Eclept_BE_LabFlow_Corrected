@@ -31,7 +31,9 @@ public class EventHandler {
 
         var queue = queueRepository.findById(event.getQueueId()).orElseThrow(() -> new TypeNotFoundException("Queue not found."));
 
-        if(!queue.active) {
+        var entries = queueEntryRepository.countQueueEntryByQueue(queue);
+
+        if(!queue.active && entries > 0) {
             testService.startQueue(event.getHospitalId());
         }
     }

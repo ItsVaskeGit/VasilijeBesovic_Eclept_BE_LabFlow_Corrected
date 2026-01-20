@@ -47,13 +47,13 @@ public class ScheduledTaskService {
 
         var machines = new ArrayList<LabMachine>();
 
-
         for(var technician : technicians) {
             technician.setBusy(false);
             machines.add(technician.labMachine);
         }
 
         for(var machine : machines) {
+            machine.setUnderMaintenance(false);
             machine.setReagentUnits(500);
         }
 

@@ -17,4 +17,6 @@ public class LabMachine {
     @JsonIgnore
     @OneToOne(mappedBy = "labMachine")
     private Technician technician;
+
+    private boolean underMaintenance;
 }

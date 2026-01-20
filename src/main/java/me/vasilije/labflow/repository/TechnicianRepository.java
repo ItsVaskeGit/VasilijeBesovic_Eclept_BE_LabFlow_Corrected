@@ -13,10 +13,10 @@ import java.util.Optional;
 @Repository
 public interface TechnicianRepository extends JpaRepository<Technician, Long> {
 
-    @Query(value = "SELECT t FROM Technician t JOIN t.labMachine m WHERE t.isBusy = false AND m.reagentUnits >= ?1 AND t.hospital.id = ?2")
+    @Query(value = "SELECT t FROM Technician t JOIN t.labMachine m ON m.technician = t WHERE t.isBusy = false AND m.reagentUnits >= ?1 AND t.hospital.id = ?2")
     Optional<List<Technician>> findFreeTechniciansWithAvailableMachines(int reagentsNeeded, long hospitalId);
 
-    @Query(value = "SELECT COUNT(t) FROM Technician t JOIN t.labMachine m WHERE t.isBusy = false AND m.reagentUnits >= ?1 AND t.hospital.id = ?2")
+    @Query(value = "SELECT COUNT(t) FROM Technician t JOIN t.labMachine m ON m.technician = t WHERE t.isBusy = false AND m.reagentUnits >= ?1 AND t.hospital.id = ?2")
     long countReadyTechnicians(int reagentUnitsNeeded, long hospitalId);
 
     Optional<List<Technician>> findByHospital(Hospital hospital);

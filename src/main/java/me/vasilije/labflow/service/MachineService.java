@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.model.LabMachine;
+import me.vasilije.labflow.repository.HospitalRepository;
 import me.vasilije.labflow.repository.MachineRepository;
 import me.vasilije.labflow.repository.TechnicianRepository;
 import me.vasilije.labflow.repository.UserRepository;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 
 @Service
 public class MachineService {
@@ -22,16 +24,19 @@ public class MachineService {
     private final TechnicianRepository technicianRepository;
     private final ScheduledTaskService scheduledTaskService;
     private final UserRepository userRepository;
+    private final HospitalRepository hospitalRepository;
     private final TokenUtils utils;
 
     private final TaskScheduler scheduler = new SimpleAsyncTaskScheduler();
 
     public MachineService(MachineRepository machineRepository, TechnicianRepository technicianRepository,
-                          ScheduledTaskService scheduledTaskService, UserRepository userRepository, TokenUtils utils) {
+                          ScheduledTaskService scheduledTaskService, UserRepository userRepository, HospitalRepository hospitalRepository,
+                          TokenUtils utils) {
         this.machineRepository = machineRepository;
         this.technicianRepository = technicianRepository;
         this.scheduledTaskService = scheduledTaskService;
         this.userRepository = userRepository;
+        this.hospitalRepository = hospitalRepository;
         this.utils = utils;
     }
 
@@ -73,9 +78,20 @@ public class MachineService {
 
     @Transactional
     public void replaceReagents(long hospitalId) {
-        var technicians = technicianRepository.findAll();
+
+        var hospital = hospitalRepository.findById(hospitalId).orElseThrow(() -> new TypeNotFoundException("Hospital not found."));
+
+        var technicians = technicianRepository.findByHospital(hospital).orElseThrow(() -> new TypeNotFoundException("No technicians found at that hospital."));
+
+        var machines = new ArrayList<LabMachine>();
+
         for(var technician : technicians) {
             technician.setBusy(true);
+            machines.add(machineRepository.findByTechnician(technician));
+        }
+
+        for(var machine: machines) {
+            machine.setUnderMaintenance(true);
         }
 
         scheduler.schedule(() -> scheduledTaskService.startReagentReplacement(hospitalId), Instant.now().plusSeconds(240));

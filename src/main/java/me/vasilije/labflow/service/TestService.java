@@ -37,8 +37,6 @@ public class TestService {
     private final ApplicationEventPublisher eventPublisher;
     private final TokenUtils utils;
 
-    public boolean isQueueActive;
-
     private final TaskScheduler scheduler = new SimpleAsyncTaskScheduler();
 
     public TestService(TestRepository testRepository, TechnicianRepository technicianRepository,
@@ -118,6 +116,15 @@ public class TestService {
             return ResponseEntity.status(503).body("Queue is full. Try again later.");
         }
 
+        if(machineRepository.allMachinesUnderMaintenance(hospitalId)) {
+            return ResponseEntity.status(503).body("All machines are currently undergoing maintenance.");
+        }
+
+        if(machineRepository.allMachinesDepleted(hospitalId)) {
+            eventPublisher.publishEvent(new StartReagentReplacementEvent(this, hospitalId));
+            return ResponseEntity.status(503).body("All machines are currently undergoing maintenance.");
+        }
+
         var entry = new QueueEntry();
 
         entry.setType(testType);
@@ -143,15 +150,14 @@ public class TestService {
 
         if(!(technicianRepository.countReadyTechnicians(testType.getReagentUnitsNeeded(), hospitalId) == 0)) {
 
-            queue.active = true;
+            queue.setActive(true);
 
             var patient = userRepository.findById(nextTest.patient.getId()).orElseThrow(() -> new UserNotFoundException("Patient was not found."));
 
             scheduleTest(testType, hospitalId, nextTest.getId(), patient.getUsername());
-        }
 
-        if(machineRepository.allMachinesDepleted()) {
-            queue.active = false;
+        }else {
+            queue.setActive(false);
             eventPublisher.publishEvent(new StartReagentReplacementEvent(this, hospitalId));
         }
 
