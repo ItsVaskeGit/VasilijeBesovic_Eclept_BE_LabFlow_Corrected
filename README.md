@@ -48,3 +48,66 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 jwt-key=labflow-app-key-super-secret-classified
 ```
+
+# Running in Docker Compose
+
+Above configuration is provided to run the application in dev mode using maven.
+
+In this repository the Dockerfile and Docker Compose file are provided to run the app as a docker container.
+
+This docker compose file includes the app and database in it.
+
+Running the app in docker compose should be as easy as running a command inside this folder:
+
+```
+docker compose up --build
+```
+
+User can add the data himself using the included HTTP endpoints, but the SQL file will be provided to aid the application testing.
+
+It can be imported like this.
+
+After successfully launching docker compose container open command prompt or terminal (by OS) and run:
+
+```
+docker ps
+```
+
+This will list all docker containers that are currently running.
+
+You need one that has `postgres` image.
+
+Make sure your CMD or Terminal is in the project directory.
+
+Copy the id of said container and run the following:
+
+```
+docker cp data.sql <id>:/data.sql
+```
+
+It should have a result like:
+
+```
+Successfully copied 20kB to <id>:/data.sql
+```
+
+After that you need to run:
+
+```
+docker exec -i <id> psql -U postgres -p 5433 -d labflow -f /data.sql
+```
+
+Then the output should be like(If it's a little different that's okay):
+
+```
+COPY 4
+COPY 20
+COPY 4
+COPY 0
+COPY 2
+COPY 0
+COPY 4
+COPY 21
+```
+
+After this procedure you app should be up and running along with the provided sample data in data.sql.

@@ -13,6 +13,7 @@ services:
       - spring.datasource.password=123456
       - spring.jpa.hibernate.ddl-auto=none
       - spring.jpa.show-sql=true
+      - jwt-key=labflow-app-key-super-secret-classified
   db:
     image: postgres
     ports:
