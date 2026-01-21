@@ -11,7 +11,7 @@ services:
       - spring.datasource.url=jdbc:postgresql://db:5433/labflow
       - spring.datasource.username=postgres
       - spring.datasource.password=123456
-      - spring.jpa.hibernate.ddl-auto=none
+      - spring.jpa.hibernate.ddl-auto=create
       - spring.jpa.show-sql=true
       - jwt-key=labflow-app-key-super-secret-classified
   db:

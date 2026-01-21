@@ -111,3 +111,5 @@ COPY 21
 ```
 
 After this procedure you app should be up and running along with the provided sample data in data.sql.
+
+Just remember to set `spring.jpa.hibernate.ddl-auto` to none after doing this to avoid losing data everytime you restart docker container.
