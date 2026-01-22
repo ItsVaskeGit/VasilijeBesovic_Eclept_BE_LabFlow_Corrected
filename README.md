@@ -34,6 +34,10 @@ The app does not allow seeing other user's tests if the current user is not Admi
 
 Postman collection and dockerfile for the app will be provided in the repository (Postman collection will be in a form of JSON file).
 
+Submission types are currently just walk-in and hospital just like assignment says, but for expandability reasons it was made as a separate entity.
+
+Walk-in is id:1 and hospital id:2 in the sample data that was provided.
+
 # Example .env
 
 
