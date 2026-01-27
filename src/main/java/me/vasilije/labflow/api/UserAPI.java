@@ -1,8 +1,8 @@
 package me.vasilije.labflow.api;
 
 import jakarta.servlet.http.HttpServletRequest;
-import me.vasilije.labflow.dto.LoginDTO;
-import me.vasilije.labflow.dto.RegisterDTO;
+import me.vasilije.labflow.dto.request.LoginDTO;
+import me.vasilije.labflow.dto.request.RegisterDTO;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.service.UserService;
 import me.vasilije.labflow.utils.TokenUtils;

@@ -1,12 +1,11 @@
 package me.vasilije.labflow.api;
 
 import jakarta.servlet.http.HttpServletRequest;
-import me.vasilije.labflow.dto.TestTypeDTO;
+import me.vasilije.labflow.dto.request.TestTypeDTO;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.service.TestService;
 import me.vasilije.labflow.service.TestTypeService;
 import me.vasilije.labflow.utils.TokenUtils;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +22,7 @@ public class AdminAPI {
         this.utils = utils;
     }
 
-    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequestMapping(path = "/test-type", method = RequestMethod.POST)
     public ResponseEntity create(@RequestBody TestTypeDTO newTestType, HttpServletRequest req) {
 
         if(!utils.requestHasToken(req)) {
@@ -37,7 +36,7 @@ public class AdminAPI {
         }
     }
 
-    @RequestMapping(path = "/modify", method = RequestMethod.PUT)
+    @RequestMapping(path = "/test-type", method = RequestMethod.PUT)
     public ResponseEntity modify(@RequestBody TestTypeDTO modifiedTestType, HttpServletRequest req) {
 
         if(!utils.requestHasToken(req)) {
@@ -51,7 +50,7 @@ public class AdminAPI {
         }
     }
 
-    @RequestMapping(path = "/delete/{id}", method = RequestMethod.DELETE)
+    @RequestMapping(path = "/test-type/{id}", method = RequestMethod.DELETE)
     public ResponseEntity delete(@PathVariable long id, HttpServletRequest req) {
 
         if(!utils.requestHasToken(req)) {

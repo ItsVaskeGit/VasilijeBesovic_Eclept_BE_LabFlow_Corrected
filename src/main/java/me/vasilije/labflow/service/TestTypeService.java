@@ -1,7 +1,7 @@
 package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
-import me.vasilije.labflow.dto.TestTypeDTO;
+import me.vasilije.labflow.dto.request.TestTypeDTO;
 import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.model.TestType;
