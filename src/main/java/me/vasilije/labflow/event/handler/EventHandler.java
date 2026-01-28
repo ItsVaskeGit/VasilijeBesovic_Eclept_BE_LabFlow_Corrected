@@ -1,6 +1,7 @@
 package me.vasilije.labflow.event.handler;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import me.vasilije.labflow.event.*;
 import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.repository.QueueEntryRepository;
@@ -12,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class EventHandler {
 
     private final MachineService machineService;
@@ -19,16 +21,6 @@ public class EventHandler {
     private final QueueEntryRepository queueEntryRepository;
     private final QueueRepository queueRepository;
     private final NotificationService notificationService;
-
-    public EventHandler(MachineService machineService, TestService testService,
-                        QueueEntryRepository queueEntryRepository, QueueRepository queueRepository,
-                        NotificationService notificationService) {
-        this.machineService = machineService;
-        this.testService = testService;
-        this.queueEntryRepository = queueEntryRepository;
-        this.queueRepository = queueRepository;
-        this.notificationService = notificationService;
-    }
 
     @EventListener
     private void handleResumeEvent(ResumeQueueEvent event) {

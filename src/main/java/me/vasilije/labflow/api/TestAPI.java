@@ -1,76 +1,40 @@
 package me.vasilije.labflow.api;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
-import me.vasilije.labflow.exception.TypeNotFoundException;
-import me.vasilije.labflow.exception.UserNotFoundException;
+import lombok.RequiredArgsConstructor;
+import me.vasilije.labflow.dto.response.QueueEntryDTO;
+import me.vasilije.labflow.dto.response.TestDTO;
 import me.vasilije.labflow.service.TestService;
-import me.vasilije.labflow.utils.TokenUtils;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class TestAPI {
 
-    private final TokenUtils utils;
     private final TestService testService;
 
-    public TestAPI(TestService testService, TokenUtils utils) {
-        this.testService = testService;
-        this.utils = utils;
-    }
-
+    @RolesAllowed("user")
     @RequestMapping(path = "/check", method = RequestMethod.GET)
-    public ResponseEntity checkPatientTests(HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        try {
-            return testService.checkPatientTests(utils.getToken(req));
-        }catch (UserNotFoundException e) {
-            return ResponseEntity.status(401).body(e.getMessage());
-        }catch (TypeNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
-
+    public List<TestDTO> checkPatientTests(HttpServletRequest req) {
+        return testService.checkPatientTests(req.getUserPrincipal().getName());
     }
 
+    @RolesAllowed("user")
     @RequestMapping(path = "/check/{id}", method = RequestMethod.GET)
-    public ResponseEntity checkTest(@PathVariable long id, HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        try {
-            return testService.checkTest(id, utils.getToken(req));
-        }catch (TypeNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    public TestDTO checkTest(@PathVariable long id, HttpServletRequest req) {
+        return testService.checkTest(id, req.getUserPrincipal().getName());
     }
 
+    @RolesAllowed("user")
     @RequestMapping(path = "/schedule/{hospitalId}/{id}/{submitTypeId}", method = RequestMethod.POST)
-    public ResponseEntity scheduleTest(@PathVariable long hospitalId ,@PathVariable long id, @PathVariable long submitTypeId, HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        if(!utils.stillValid(utils.getToken(req))) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not logged in.");
-        }
-
-        try {
-            return testService.addTestToQueue(id, submitTypeId, hospitalId, utils.getUsername(utils.getToken(req)));
-        } catch (TypeNotFoundException | UserNotFoundException e) {
-            return ResponseEntity.status(503).body(e.getMessage());
-        }
+    public QueueEntryDTO scheduleTest(@PathVariable long hospitalId , @PathVariable long id, @PathVariable long submitTypeId, HttpServletRequest req) {
+        return testService.addTestToQueue(id, submitTypeId, hospitalId, req.getUserPrincipal().getName());
     }
 
 }

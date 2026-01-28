@@ -1,4 +1,3 @@
 package me.vasilije.labflow.dto.response;
 
-public class HospitalDTO {
-}
+public record HospitalDTO(long id, String name) { }

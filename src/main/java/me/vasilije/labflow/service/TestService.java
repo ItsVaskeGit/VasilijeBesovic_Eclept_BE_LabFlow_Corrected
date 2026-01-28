@@ -1,6 +1,10 @@
 package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import me.vasilije.labflow.dto.response.QueueEntryDTO;
+import me.vasilije.labflow.dto.response.TestDTO;
+import me.vasilije.labflow.dto.response.TestTypeDTO;
 import me.vasilije.labflow.event.NewTestEvent;
 import me.vasilije.labflow.event.StartReagentReplacementEvent;
 import me.vasilije.labflow.exception.NoMachinesAvailableException;
@@ -10,18 +14,18 @@ import me.vasilije.labflow.model.QueueEntry;
 import me.vasilije.labflow.model.Test;
 import me.vasilije.labflow.model.TestType;
 import me.vasilije.labflow.repository.*;
-import me.vasilije.labflow.utils.TokenUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TestService {
 
     private final TestRepository testRepository;
@@ -35,74 +39,35 @@ public class TestService {
     private final QueueRepository queueRepository;
     private final HospitalRepository hospitalRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final TokenUtils utils;
 
     private final TaskScheduler scheduler = new SimpleAsyncTaskScheduler();
 
-    public TestService(TestRepository testRepository, TechnicianRepository technicianRepository,
-                       MachineRepository machineRepository, TestTypeRepository typeRepository,
-                       UserRepository userRepository, ScheduledTaskService scheduledTaskService,
-                       SubmitTypeRepository submitTypeRepository, QueueEntryRepository queueEntryRepository,
-                       ApplicationEventPublisher eventPublisher, QueueRepository queueRepository,
-                       HospitalRepository hospitalRepository, TokenUtils utils) {
-        this.testRepository = testRepository;
-        this.technicianRepository = technicianRepository;
-        this.machineRepository = machineRepository;
-        this.typeRepository = typeRepository;
-        this.userRepository = userRepository;
-        this.scheduledTaskService = scheduledTaskService;
-        this.submitTypeRepository = submitTypeRepository;
-        this.queueEntryRepository = queueEntryRepository;
-        this.eventPublisher = eventPublisher;
-        this.queueRepository = queueRepository;
-        this.hospitalRepository = hospitalRepository;
-        this.utils = utils;
-    }
+    public TestDTO checkTest(long id, String username) {
 
-    public ResponseEntity checkTest(long id, String jwtToken) {
-
-        if(!utils.stillValid(jwtToken)) {
-            return ResponseEntity.status(401).body("You are not logged in or your session has expired.");
-        }
-
-        var user = userRepository.findByUsername(utils.getUsername(jwtToken)).orElseThrow(() -> new UserNotFoundException("User not found."));
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found."));
         var test = testRepository.findById(id).orElseThrow(() -> new TypeNotFoundException("Test with given id was not found."));
 
         if(!(test.patient.getId() == user.getId())) {
-            return ResponseEntity.status(401).body("This test does not belong to you.");
+            return null;
         }
 
-        return ResponseEntity.status(200).body(test);
+        return new TestDTO(test.getId(), test.getSubmitType(), test.getType(), test.isFinished());
     }
 
-    public ResponseEntity checkPatientTests(String jwtToken) {
+    public List<TestDTO> checkPatientTests(String username) {
 
-        if(!utils.stillValid(jwtToken)) {
-            return ResponseEntity.status(401).body("You are not logged in or your session has expired.");
-        }
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found."));
 
-        var user = userRepository.findByUsername(utils.getUsername(jwtToken)).orElseThrow(() -> new UserNotFoundException("User not found."));
-        var tests = testRepository.findByPatient(user);
-
-        return ResponseEntity.status(200).body(tests);
+        return testRepository.findByPatient(user).stream()
+                .map(test -> new TestDTO(test.getId(), test.getSubmitType(), test.getType(), test.isFinished())).toList();
     }
 
-    public ResponseEntity getTestsPaginate(int pageNumber, int perPage, String jwtToken) {
-
-        if(!utils.stillValid(jwtToken)) {
-            return ResponseEntity.status(401).body("You are not logged in or your session has expired.");
-        }
-
-        var user = userRepository.findByUsername(utils.getUsername(jwtToken)).orElseThrow(() -> new UserNotFoundException("User not found."));
-
-        if(!user.isAdmin()) {
-            return ResponseEntity.status(401).body("You don't have necessary permissions to access this.");
-        }
-
-        return ResponseEntity.status(200).body(testRepository.getTests(PageRequest.of(pageNumber, perPage)));
+    public List<TestDTO> getTestsPaginate(int pageNumber, int perPage) {
+        return testRepository.getTests(PageRequest.of(pageNumber, perPage)).stream()
+                .map((test -> new TestDTO(test.getId(), test.getSubmitType(), test.getType(), test.isFinished()))).toList();
     }
 
-    public ResponseEntity addTestToQueue(long testId, long submitTypeId, long hospitalId, String username) {
+    public QueueEntryDTO addTestToQueue(long testId, long submitTypeId, long hospitalId, String username) {
 
         var submitType = submitTypeRepository.findById(submitTypeId).orElseThrow(() -> new TypeNotFoundException("Submit type not found."));
 
@@ -113,16 +78,16 @@ public class TestService {
         var queue = queueRepository.findByHospital(hospital).orElseThrow(() -> new TypeNotFoundException("That hospital does not have a queue."));
 
         if(!submitType.isPriority() && queueEntryRepository.countQueueEntryByQueue(queue) >= 20) {
-            return ResponseEntity.status(503).body("Queue is full. Try again later.");
+            return null;
         }
 
         if(machineRepository.allMachinesUnderMaintenance(hospitalId)) {
-            return ResponseEntity.status(503).body("All machines are currently undergoing maintenance.");
+            return null;
         }
 
         if(machineRepository.allMachinesDepleted(hospitalId)) {
             eventPublisher.publishEvent(new StartReagentReplacementEvent(this, hospitalId));
-            return ResponseEntity.status(503).body("All machines are currently undergoing maintenance.");
+            return null;
         }
 
         var entry = new QueueEntry();
@@ -135,7 +100,7 @@ public class TestService {
 
         eventPublisher.publishEvent(new NewTestEvent(this, hospitalId, queue.getId()));
 
-        return ResponseEntity.status(200).body(savedEntry);
+        return new QueueEntryDTO(savedEntry.getId(), savedEntry.getType());
     }
 
     @Transactional

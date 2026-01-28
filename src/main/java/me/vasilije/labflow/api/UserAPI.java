@@ -1,46 +1,38 @@
 package me.vasilije.labflow.api;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.annotation.security.RolesAllowed;
+import lombok.RequiredArgsConstructor;
 import me.vasilije.labflow.dto.request.LoginDTO;
 import me.vasilije.labflow.dto.request.RegisterDTO;
-import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.service.UserService;
 import me.vasilije.labflow.utils.TokenUtils;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 public class UserAPI {
 
     private final UserService userService;
     private final TokenUtils utils;
-
-    public UserAPI(UserService userService, TokenUtils utils) {
-        this.userService = userService;
-        this.utils = utils;
-    }
+    private final AuthenticationManager manager;
 
     @RequestMapping(path = "/login", method = RequestMethod.POST)
-    public ResponseEntity login(@RequestBody LoginDTO login) {
-        return userService.login(login);
+    public String login(@RequestBody LoginDTO login) {
+        var auth = manager.authenticate(new UsernamePasswordAuthenticationToken(login.getUsername(), login.getPassword()));
+        return utils.fetchToken(auth);
     }
 
     @RequestMapping(path = "/register", method = RequestMethod.POST)
-    public ResponseEntity register(@RequestBody RegisterDTO register) {
+    public Boolean register(@RequestBody RegisterDTO register) {
         return userService.registerNewUser(register);
     }
 
+
+    @RolesAllowed("admin")
     @RequestMapping(path = "/promote/{username}", method = RequestMethod.PUT)
-    public ResponseEntity promote(@PathVariable String username, HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        try {
-            return userService.promote(username, utils.getToken(req));
-        }catch (UserNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    public Boolean promote(@PathVariable String username) {
+        return userService.promote(username);
     }
 }

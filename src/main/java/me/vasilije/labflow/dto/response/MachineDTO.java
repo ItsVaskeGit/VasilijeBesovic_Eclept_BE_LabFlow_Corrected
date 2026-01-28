@@ -1,4 +1,4 @@
 package me.vasilije.labflow.dto.response;
 
-public class Machine {
+public record MachineDTO(long id, int reagentUnits) {
 }

@@ -1,48 +1,34 @@
 package me.vasilije.labflow.utils;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.stream.Collectors;
 
-@Component
-@Scope("singleton")
+@Service
+@RequiredArgsConstructor
 public class TokenUtils {
 
-    @Value("${jwt-key}")
-    private String JWT_SECRET;
+    private final JwtEncoder encoder;
 
-    public TokenUtils() {}
-
-    public String fetchToken(String username) {
-        return Jwts.builder().subject(username).issuedAt(new Date()).expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes())).compact();
-    }
-
-    public String getUsername(String jwtToken) {
-        return Jwts.parser().verifyWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes())).build().parseSignedClaims(jwtToken).getPayload().getSubject();
-    }
-
-    public boolean stillValid(String jwtToken) {
-        try {
-            Jwts.parser().verifyWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes())).build().parseSignedClaims(jwtToken)
-                    .getPayload().getExpiration();
-            return true;
-        }catch (ExpiredJwtException e) {
-            return false;
-        }
-    }
-
-    public boolean requestHasToken(HttpServletRequest req) {
-        return req.getHeader("Authorization") != null;
-    }
-
-    public String getToken(HttpServletRequest req) {
-        return req.getHeader("Authorization").split(" ")[1];
+    public String fetchToken(Authentication authentication) {
+        var scope = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(" "));
+        var claimSet = JwtClaimsSet.builder()
+                .issuer("self")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plus(10, ChronoUnit.HOURS))
+                .subject(authentication.getName())
+                .claim("scope", scope)
+                .build();
+        return encoder.encode(JwtEncoderParameters.from(claimSet)).getTokenValue();
     }
 }

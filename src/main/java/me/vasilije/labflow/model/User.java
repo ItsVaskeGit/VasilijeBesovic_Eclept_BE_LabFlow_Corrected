@@ -18,5 +18,5 @@ public class User {
 
     private boolean isTechnician;
 
-    private boolean isAdmin;
+    private String roles;
 }

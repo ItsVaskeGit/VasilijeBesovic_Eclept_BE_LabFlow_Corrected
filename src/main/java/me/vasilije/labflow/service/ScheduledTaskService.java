@@ -1,42 +1,30 @@
 package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import me.vasilije.labflow.event.ResumeQueueEvent;
 import me.vasilije.labflow.event.TestFinishedEvent;
 import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.exception.UserNotFoundException;
-import me.vasilije.labflow.model.Hospital;
 import me.vasilije.labflow.model.LabMachine;
-import me.vasilije.labflow.repository.*;
+import me.vasilije.labflow.repository.HospitalRepository;
+import me.vasilije.labflow.repository.QueueRepository;
+import me.vasilije.labflow.repository.TechnicianRepository;
+import me.vasilije.labflow.repository.TestRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ScheduledTaskService {
 
     private final TestRepository testRepository;
-    private final MachineRepository machineRepository;
     private final TechnicianRepository technicianRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final QueueEntryRepository queueEntryRepository;
     private final QueueRepository queueRepository;
     private final HospitalRepository hospitalRepository;
-
-    public ScheduledTaskService(MachineRepository machineRepository, TechnicianRepository technicianRepository,
-                                TestRepository testRepository, ApplicationEventPublisher applicationEventPublisher,
-                                QueueEntryRepository queueEntryRepository, QueueRepository queueRepository,
-                                HospitalRepository hospitalRepository) {
-        this.machineRepository = machineRepository;
-        this.technicianRepository = technicianRepository;
-        this.testRepository = testRepository;
-        this.applicationEventPublisher = applicationEventPublisher;
-        this.queueEntryRepository = queueEntryRepository;
-        this.queueRepository = queueRepository;
-        this.hospitalRepository = hospitalRepository;
-    }
 
     @Transactional
     public void startReagentReplacement(long hospitalId) {

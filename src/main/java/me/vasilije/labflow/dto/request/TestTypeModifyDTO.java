@@ -5,14 +5,15 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class TestTypeDTO {
+public class TestTypeModifyDTO {
 
+    @NotNull(message = "You need to provide the ID of the wanted test type.")
     private long id;
 
     @NotBlank(message = "Test type needs to have a name.")
     private String name;
 
-    @NotNull(message = "Test type needs to have an excecution duration.")
+    @NotNull(message = "Test type needs to have an execution duration.")
     private int duration;
 
     @NotNull(message = "Test type needs to use a certain number of reagents to be completed.")

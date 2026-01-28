@@ -1,80 +1,45 @@
 package me.vasilije.labflow.api;
 
-import jakarta.servlet.http.HttpServletRequest;
-import me.vasilije.labflow.dto.request.TestTypeDTO;
-import me.vasilije.labflow.exception.UserNotFoundException;
+import jakarta.annotation.security.RolesAllowed;
+import lombok.RequiredArgsConstructor;
+import me.vasilije.labflow.dto.request.TestTypeCreateDTO;
+import me.vasilije.labflow.dto.request.TestTypeModifyDTO;
+import me.vasilije.labflow.dto.response.TestDTO;
+import me.vasilije.labflow.dto.response.TestTypeDTO;
 import me.vasilije.labflow.service.TestService;
 import me.vasilije.labflow.service.TestTypeService;
-import me.vasilije.labflow.utils.TokenUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 public class AdminAPI {
 
     private final TestTypeService testTypeService;
     private final TestService testService;
-    private final TokenUtils utils;
 
-    public AdminAPI(TestTypeService testTypeService, TestService testService, TokenUtils utils) {
-        this.testTypeService = testTypeService;
-        this.testService = testService;
-        this.utils = utils;
-    }
-
+    @RolesAllowed("admin")
     @RequestMapping(path = "/test-type", method = RequestMethod.POST)
-    public ResponseEntity create(@RequestBody TestTypeDTO newTestType, HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        try {
-            return testTypeService.createNewTestType(newTestType, utils.getToken(req));
-        }catch(UserNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    public TestTypeDTO create(@RequestBody TestTypeCreateDTO newTestType) {
+        return testTypeService.createNewTestType(newTestType);
     }
 
+    @RolesAllowed("admin")
     @RequestMapping(path = "/test-type", method = RequestMethod.PUT)
-    public ResponseEntity modify(@RequestBody TestTypeDTO modifiedTestType, HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        try {
-            return testTypeService.modifyTestType(modifiedTestType, utils.getToken(req));
-        }catch(UserNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    public TestTypeDTO modify(@RequestBody TestTypeModifyDTO modifiedTestType) {
+        return testTypeService.modifyTestType(modifiedTestType);
     }
 
+    @RolesAllowed("admin")
     @RequestMapping(path = "/test-type/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity delete(@PathVariable long id, HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        try {
-            return testTypeService.deleteTestType(id, utils.getToken(req));
-        }catch(UserNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    public Boolean delete(@PathVariable long id) {
+        return testTypeService.deleteTestType(id);
     }
 
+    @RolesAllowed("admin")
     @RequestMapping(path = "/tests/{pageNumber}/{perPage}", method = RequestMethod.GET)
-    public ResponseEntity getTests(@PathVariable int pageNumber, @PathVariable int perPage, HttpServletRequest req) {
-
-        if(!utils.requestHasToken(req)) {
-            return ResponseEntity.status(401).body("You need to provide authentication credentials.");
-        }
-
-        try {
-            return testService.getTestsPaginate(pageNumber, perPage, utils.getToken(req));
-        }catch (UserNotFoundException e) {
-            return ResponseEntity.status(401).body(e.getMessage());
-        }
+    public List<TestDTO> getTests(@PathVariable int pageNumber, @PathVariable int perPage) {
+        return testService.getTestsPaginate(pageNumber, perPage);
     }
 }

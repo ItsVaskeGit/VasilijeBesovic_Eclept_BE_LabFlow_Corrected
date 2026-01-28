@@ -1,4 +1,3 @@
 package me.vasilije.labflow.dto.response;
 
-public class TestTypeDTO {
-}
+public record TestTypeDTO(String name, int duration, int reagentsNeeded) { }

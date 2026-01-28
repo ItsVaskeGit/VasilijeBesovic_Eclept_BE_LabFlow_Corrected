@@ -1,6 +1,8 @@
 package me.vasilije.labflow.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import me.vasilije.labflow.dto.response.MachineDTO;
 import me.vasilije.labflow.exception.TypeNotFoundException;
 import me.vasilije.labflow.exception.UserNotFoundException;
 import me.vasilije.labflow.model.LabMachine;
@@ -8,8 +10,6 @@ import me.vasilije.labflow.repository.HospitalRepository;
 import me.vasilije.labflow.repository.MachineRepository;
 import me.vasilije.labflow.repository.TechnicianRepository;
 import me.vasilije.labflow.repository.UserRepository;
-import me.vasilije.labflow.utils.TokenUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 import org.springframework.stereotype.Service;
@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 
 @Service
+@RequiredArgsConstructor
 public class MachineService {
 
     private final MachineRepository machineRepository;
@@ -25,45 +26,23 @@ public class MachineService {
     private final ScheduledTaskService scheduledTaskService;
     private final UserRepository userRepository;
     private final HospitalRepository hospitalRepository;
-    private final TokenUtils utils;
 
     private final TaskScheduler scheduler = new SimpleAsyncTaskScheduler();
 
-    public MachineService(MachineRepository machineRepository, TechnicianRepository technicianRepository,
-                          ScheduledTaskService scheduledTaskService, UserRepository userRepository, HospitalRepository hospitalRepository,
-                          TokenUtils utils) {
-        this.machineRepository = machineRepository;
-        this.technicianRepository = technicianRepository;
-        this.scheduledTaskService = scheduledTaskService;
-        this.userRepository = userRepository;
-        this.hospitalRepository = hospitalRepository;
-        this.utils = utils;
-    }
-
     @Transactional
-    public ResponseEntity createMachine(String jwtToken) {
-
-        var user = userRepository.findByUsername(utils.getUsername(jwtToken)).orElseThrow(() -> new UserNotFoundException("User not found."));
-
-        if(!user.isAdmin()) {
-            return ResponseEntity.status(401).body("You don't have necessary permissions to access this.");
-        }
+    public MachineDTO createMachine() {
 
         var newMachine = new LabMachine();
 
         newMachine.setReagentUnits(500);
 
-        return ResponseEntity.status(200).body(machineRepository.save(newMachine));
+        var savedMachine = machineRepository.save(newMachine);
+
+        return new MachineDTO(savedMachine.getId(), savedMachine.getReagentUnits());
     }
 
     @Transactional
-    public ResponseEntity assignMachine(long machineId, long userId, String jwtToken) {
-
-        var user = userRepository.findByUsername(utils.getUsername(jwtToken)).orElseThrow(() -> new UserNotFoundException("User not found."));
-
-        if(!user.isAdmin()) {
-            return ResponseEntity.status(401).body("You don't have necessary permissions to access this.");
-        }
+    public MachineDTO assignMachine(long machineId, long userId) {
 
         var machine = machineRepository.findById(machineId).orElseThrow(() -> new TypeNotFoundException("Machine was not found."));
 
@@ -73,7 +52,7 @@ public class MachineService {
 
         technician.setLabMachine(machine);
 
-        return ResponseEntity.status(200).body(machine);
+        return new MachineDTO(machine.getId(), machine.getReagentUnits());
     }
 
     @Transactional
